@@ -49,3 +49,7 @@ https://github.com/ethereum/go-ethereum/tree/master/core/vm
 
 https://github.com/ethereum/py-evm
 
+https://www.nico.bio/articles/evm-from-scratch
+
+https://karmacoma.notion.site/Building-an-EVM-from-scratch-part-1-the-execution-context-c28ebb4200c94f6fb75948a5feffc686
+
