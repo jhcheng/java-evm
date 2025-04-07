@@ -3,8 +3,6 @@ package com.horace.evm;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import lombok.Getter;
 
 public class ExecutionContext {
