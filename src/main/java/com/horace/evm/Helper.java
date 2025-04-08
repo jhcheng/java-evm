@@ -13,4 +13,8 @@ public class Helper {
         return true;
     }
 
+    public static boolean checkValueRange(final byte[] value) {
+        return checkValueRange(new BigInteger(value));
+    }
+
 }

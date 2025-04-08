@@ -2,6 +2,8 @@ package com.horace.evm;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
+import java.util.Set;
 
 import lombok.Getter;
 
@@ -10,14 +12,15 @@ public class ExecutionContext {
     private boolean stopped = false;    
     @Getter
     private byte[] code;
-    @Getter
     private int pc;
     @Getter
     private Stack stack;
     @Getter
     private Memory memory;
     @Getter
-    private byte[] returnData = new byte[0];
+    private byte[][] returnData = new byte[0][];
+    @Getter
+    private Set<Integer> jumpDestinations = new HashSet<>();
 
     // Constructors
     public ExecutionContext() {
@@ -33,6 +36,7 @@ public class ExecutionContext {
         this.pc = pc;
         this.stack = stack;
         this.memory = memory;
+        jumpDestinations = validJumpDestinations(code);
     }
 
     public void stop() {
@@ -41,6 +45,14 @@ public class ExecutionContext {
 
     public boolean isStopped() {
         return stopped;
+    }
+
+    public int getProgramCounter() {
+        return pc;
+    }
+
+    public void setProgramCounter(final int pc) {
+        this.pc = pc;
     }
 
     public BigInteger readCode(final int numBytes) {
@@ -54,6 +66,27 @@ public class ExecutionContext {
     public void setReturnData(final int offset, final int size) {
         stopped = true;
         returnData = memory.load(offset, size);
+    }
+
+
+    private Set<Integer> validJumpDestinations(byte[] code) {
+        Set<Integer> jumpdests = new HashSet<>();
+        int i = 0;
+        
+        while (i < code.length) {
+            int currentOp = code[i] & 0xFF;  // Convert to unsigned byte
+            
+            if (currentOp == Instruction.JUMPDEST.getOpcode()) {
+                jumpdests.add(i);
+            } else if (currentOp >= Instruction.PUSH1.getOpcode() && currentOp <= Instruction.PUSH32.getOpcode()) {
+                // Skip push data bytes (currentOp - PUSH1_OPCODE + 1)
+                i += (currentOp - Instruction.PUSH1.getOpcode());
+            }
+            
+            i++;  // Move to next instruction
+        }
+        
+        return jumpdests;
     }
 
 }
