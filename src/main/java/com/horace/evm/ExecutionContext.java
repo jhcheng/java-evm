@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import lombok.Getter;
+import lombok.Setter;
 
 public class ExecutionContext {
 
@@ -18,9 +19,23 @@ public class ExecutionContext {
     @Getter
     private Memory memory;
     @Getter
-    private byte[][] returnData = new byte[0][];
+    private final Storage storage = new Storage();
+    @Getter
+    private byte[] returnData = new byte[0];
     @Getter
     private Set<Integer> jumpDestinations = new HashSet<>();
+    @Getter
+    @Setter
+    private TxData txData;
+    @Getter
+    @Setter
+    private Block block;
+    @Getter
+    @Setter
+    private BigInteger chainId = BigInteger.ZERO;
+    @Getter
+    @Setter
+    private Account contract;
 
     // Constructors
     public ExecutionContext() {
@@ -67,7 +82,6 @@ public class ExecutionContext {
         stopped = true;
         returnData = memory.load(offset, size);
     }
-
 
     private Set<Integer> validJumpDestinations(byte[] code) {
         Set<Integer> jumpdests = new HashSet<>();

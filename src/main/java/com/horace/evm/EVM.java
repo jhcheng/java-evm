@@ -16,7 +16,7 @@ public class EVM {
             System.out.println("====================================");
         }
         if (context.getReturnData().length > 0) {
-            System.out.println("RETURN: " + HexFormat.of().formatHex(context.getReturnData()[0]));
+            System.out.println("RETURN: " + HexFormat.of().formatHex(context.getReturnData()));
         }
 
     }

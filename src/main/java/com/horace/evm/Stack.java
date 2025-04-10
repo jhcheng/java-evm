@@ -2,6 +2,8 @@ package com.horace.evm;
 
 import java.math.BigInteger;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 public class Stack {
 
     private static final int MAX_SIZE = 1024;
@@ -31,11 +33,11 @@ public class Stack {
         }
     }
     
-    public BigInteger pop() {
+    public byte[] pop() {
         if (size <= 0) {
             throw new IllegalStateException("Stack underflow");
         }
-        final BigInteger value = new BigInteger(stack[top]);
+        final byte[] value = stack[top];
         stack[top--] = null;
         size--;
         return value;
@@ -45,11 +47,11 @@ public class Stack {
      * Returns the value at the top of the stack without removing it.
      * @return
      */
-    public BigInteger peek() {
+    public byte[] peek() {
         if (size <= 0) {
             throw new IllegalStateException("Stack is empty");
         }
-        return new BigInteger(stack[top]);
+        return ArrayUtils.clone(stack[top]);
     }
 
     /**
@@ -58,11 +60,11 @@ public class Stack {
      * @param index
      * @return
      */
-    public BigInteger peek(final int index) {
+    public byte[] peek(final int index) {
         if (index < 0 || index > top) {
             throw new IndexOutOfBoundsException("Stack index out of bounds");
         }
-        return new BigInteger(stack[top - index]);
+        return ArrayUtils.clone(stack[top - index]);
     }
 
     /**
@@ -92,7 +94,7 @@ public class Stack {
         StringBuilder sb = new StringBuilder();
         sb.append("Stack: [");
         for (int i = 0; i <= top; i++) {
-            sb.append(new BigInteger(stack[i]).longValue());
+            sb.append(new BigInteger(stack[i]));
             if (i < top) {
                 sb.append(", ");
             }

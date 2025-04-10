@@ -1,61 +1,95 @@
 package com.horace.evm;
 
-import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.HexFormat;
 
+/**
+// From the yellow paper:
+// The memory model is a simple word-addressed byte array.
+// The word size is 256 bits (32 bytes).
+// The memory is expanded by a word (32 bytes) at a time. Memory expansion costs gas.
+// The memory size is always a multiple of 32 bytes.
+// The memory starts empty at the beginning of every instance execution.
+ * 
+ */
 public class Memory {
 
-    private static final int MAX_SIZE = 1024 * 1024;
-    private static final int WORD_SIZE = 256 / 8;
+    private static final int WORD_SIZE_IN_BYTE = 256 / 8;
 
-    private final byte[][] memory = new byte[MAX_SIZE][];
+    private ByteBuffer memory = ByteBuffer.allocate(0);
+    private static final String INVALID_MEMORY_OFFSET = "Invalid memory offset";
+    private static final String INVALID_MEMORY_VALUE_SIZE = "Invalid memory value size";
+
+    //private final List<byte[]> memory = new ArrayList<>();
 
     public void store(final int offset, final byte[] value) {
-        if (offset < 0 || offset >= MAX_SIZE) {
-            throw new IndexOutOfBoundsException("Memory index out of bounds");
-        }
-        if (Helper.checkValueRange(value)) {
-            memory[offset] = value;
-        }
+        store(offset, value, WORD_SIZE_IN_BYTE);
     }
 
-    public byte[] load(final int index) {
-        if (index < 0 || index >= MAX_SIZE) {
-            throw new IndexOutOfBoundsException("Memory index out of bounds");
+    public void store(final int offset, final byte[] value, final int size) {
+        if (offset < 0) {
+            throw new IllegalArgumentException(INVALID_MEMORY_OFFSET);
         }
-        final byte[] value = memory[index];
-        if (value == null) {
+
+        checkIfMemoryNeedsExpansion(offset, size);
+
+        byte[] word = new byte[WORD_SIZE_IN_BYTE];
+        System.arraycopy(value, 0, word, 0, Math.min(value.length, word.length));
+        this.memory.put(word);
+    }
+
+
+    public byte[] load(final int offset) {
+        return load(offset, WORD_SIZE_IN_BYTE);
+    }
+
+    public byte[] load(final int offset, final int size) {
+        if (offset < 0) {
+            throw new IllegalArgumentException(INVALID_MEMORY_OFFSET);
+        }
+        if (size == 0) {
             return new byte[0];
         }
-        return value;
+
+        checkIfMemoryNeedsExpansion(offset, size);
+
+        byte[] output = new byte[size];
+        for (int i = 0; i < size; i++) {
+            output[i] = this.memory.get(offset + i);
+        }
+        return output;
     }
 
-    public byte[][] load(final int offset, final int size) {
-        if (offset < 0 || offset >= MAX_SIZE) {
-            throw new IndexOutOfBoundsException("Memory index out of bounds");
+    private boolean checkIfMemoryNeedsExpansion(final int offset, final int size) {
+        final int overflow = (int) (Math.ceil((double) (offset + size) / 32) * 32 - this.size());
+        if (overflow > 0) {
+            ByteBuffer newMemory = ByteBuffer.allocate(this.size() + overflow);
+            this.memory.rewind(); // Reset position to 0
+            newMemory.put(this.memory);
+            this.memory = newMemory;
         }
-        if (size <= 0 || offset + size > MAX_SIZE) {
-            throw new IllegalArgumentException("Invalid length");
-        }
-        final byte[][] result = new byte[size][];
-        for (int i = 0; i < size; i++) {
-            result[i] = memory[offset + i];
-        }
-        return result;
+        return overflow > 0;
     }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Memory: [");
-        for (int i = 0; i < memory.length; i++) {
-            if (memory[i] != null) {
-                sb.append(new BigInteger(memory[i]).longValue());
-                if (i < memory.length - 1) {
-                    sb.append(", ");
-                }
+        final StringBuilder dump = new StringBuilder();
+        for (int i = 0; i < this.memory.position(); i += 32) {
+            int end = Math.min(i + 32, this.memory.position());
+            byte[] word = new byte[end - i];
+            for (int j = 0; j < end - i; j++) {
+                word[j] = this.memory.get(i + j);
             }
+            dump.append(HexFormat.of().formatHex(word)).append("\n");
         }
-        sb.append("]");
-        return sb.toString();
+        return dump.toString();
+    }
+
+    public int size() {
+        return memory.position();
+    }
+
+    public int activeWordsCount() {
+        return this.size() / WORD_SIZE_IN_BYTE;
     }
 
 }
