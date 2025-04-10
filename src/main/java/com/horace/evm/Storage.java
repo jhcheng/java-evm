@@ -35,7 +35,7 @@ public class Storage {
 
         public Slot(final byte[] address) {
             this.address = address;
-            slotMap = db.hashMap("slotMap-" + HexFormat.of().formatHex(address))
+            slotMap = GlobalState.getDB().hashMap("slotMap-" + HexFormat.of().formatHex(address))
                 .keySerializer(Serializer.BYTE_ARRAY)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .createOrOpen();
